@@ -8,9 +8,11 @@ public class MatrixWindow implements ActionListener
     private JPanel panel;
     private JButton button;
     private MatrixPanel matrixPanel;
+    private MatrixPanel inverseMatrixPanel;
     private int matrixDimension;
     private double [][]matrix;
     private JTextField showDet;
+    private JTextField alert;
     
     public MatrixWindow()
     {
@@ -90,9 +92,38 @@ public class MatrixWindow implements ActionListener
 		panel.revalidate();
 		panel.repaint();
 	    }
+	    if (inverseMatrixPanel != null)
+	    {
+		panel.remove(inverseMatrixPanel);
+		panel.revalidate();
+		panel.repaint();
+	    }
+	    if (alert != null)
+	    {
+		panel.remove(alert);
+		panel.revalidate();
+		panel.repaint();
+	    }
+
+	    panel.setLayout(new GridLayout(4, 1));
 	    showDet = new JTextField("Det of your matrix = " + detOfMatrix(MatrixWindow.this.matrix));
+	    showDet.setFont(new Font("serif", Font.PLAIN, 24));
 	    showDet.setColumns(30);
 	    panel.add(showDet);
+
+	    Matrix temp = new Matrix(MatrixWindow.this.matrix);
+	    if (!temp.isSingular())
+	    {
+		inverseMatrixPanel = new MatrixPanel(temp.inverse());
+		panel.add(inverseMatrixPanel);
+	    }
+	    else
+	    {
+		alert = new JTextField("This matrix is singular. ");
+		alert.setFont(new Font("serif", Font.PLAIN, 24));
+		panel.add(alert);
+	    }
+
 	    panel.revalidate();
 	    panel.repaint();
 	}
