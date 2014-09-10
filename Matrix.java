@@ -22,13 +22,57 @@ public class Matrix
 	}
     }
 
+    public Matrix(int dimension)
+    {
+	this.dimension = dimension;
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		matrix[i][j] = 0;
+	    }
+	}
+    }
+
+    public Matrix transpose()
+    {
+	double [][]temp = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		temp[j][i] = matrix[i][j];
+	    }
+	}
+	return new Matrix(temp);
+    }
+
+    public Matrix product(Matrix argument)
+    {
+	double [][]temp = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		double sum = 0;
+		for (int k = 0; k < dimension; k++)
+		{
+		    sum = sum + this.matrix[i][k]*argument.matrix[k][j];
+		}
+		temp[i][j] = sum;
+	    }
+	}
+	return new Matrix(temp);
+    }
+
     public void printMatrix()
     {
 	for (int i = 0; i < dimension; i++)
 	{
 	    for (int j = 0; j < dimension; j++)
 	    {
-		System.out.print(matrix[i][j] + "\t");
+		System.out.format("%.3f", matrix[i][j]);
+		System.out.print("\t");
 	    }
 	    System.out.println();
 	}
@@ -211,29 +255,169 @@ public class Matrix
 	return new Matrix(temp);
     }
 
+    public Matrix[] QRDecomposition()
+    {
+	Vector []xi = new Vector[dimension];
+	for (int col = 0; col < dimension; col++)
+	{
+	    double []temp = new double [dimension];
+	    for (int row = 0; row < dimension; row++)
+	    {
+		temp[row] = matrix[row][col];
+	    }
+	    xi[col] = new Vector(temp);
+	}
+	
+	Vector []e = new Vector[dimension];
+	for (int n = 0; n < dimension; n++)
+	{
+	    double []nullVector = new double [dimension];
+	    for (int i = 0; i < dimension; i++)
+	    {
+		nullVector[i] = 0;
+	    }
+	    Vector projection = new Vector(nullVector);
+	    for (int i = 0; i <= n - 1; i++)
+	    {
+		projection = projection.add( e[i].scale(xi[n].innerProductWith(e[i])));
+	    }
+	    e[n] = xi[n].subtract(projection).normalize();
+	}
+
+	double [][]temp = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		temp[j][i] = e[i].element(j);
+	    }
+	}
+	Matrix Q = new Matrix(temp);
+	Matrix R = this.inverse().product(Q);
+	R = R.inverse();
+	Matrix [] matrixArray = new Matrix[2];
+	matrixArray[0] = Q;
+	matrixArray[1] = R;
+	return matrixArray;
+    }
+
+    private static boolean isDiagonal(Matrix argument)
+    {
+	int dimension = argument.dimension;
+	double epsilon = 0.000001;
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		if (i != j)
+		{
+		    if (Math.abs(argument.matrix[i][j]) > epsilon)
+			return false;
+		}
+	    }
+	}
+	return true;
+    }
+
+    private static boolean isBlock(Matrix argument)
+    {
+	int dimension = argument.dimension;
+	double epsilon = 0.0000001;
+	for (int i = 0; i < dimension - 1; i++)
+	{
+	    if (Math.abs(argument.matrix[i + 1][i]) > epsilon)
+		return true;
+	}
+	return false;
+    }
+
+    public Complex []eigenvalues()
+    {
+	return this.eigenvalues(100);
+    }
+
+    private Complex [] eigenvalues(int iterationNumber)
+    {
+	Matrix []matrixArray = this.QRDecomposition();
+	for (int i = 0; i < iterationNumber; i++)
+	{
+	    Matrix tempMatrix = matrixArray[1].product(matrixArray[0]);
+	    matrixArray = tempMatrix.QRDecomposition();
+	}
+
+	Matrix result = matrixArray[1].product(matrixArray[0]);
+
+	if (isBlock(result))
+	{
+	    Complex []eigenvector = new Complex[dimension];
+	    int row = 0;
+	    double epsilon = 0.0000001;
+	    while (row < dimension - 1)
+	    {
+		if (Math.abs(result.matrix[row + 1][row]) < epsilon)
+		{
+		    eigenvector[row] = Complex.toComplex(result.matrix[row][row]);
+		    row++;
+		}
+		else
+		{
+		    double a = result.matrix[row][row];
+		    double b = result.matrix[row][row + 1];
+		    double c = result.matrix[row + 1][row];
+		    double d = result.matrix[row + 1][row + 1];
+		    double trace = a + d;
+		    double determinant = a*d - b*c;
+		    double discriminant = trace*trace - 4*determinant;
+		    eigenvector[row] = new Complex(0.5*trace, 0.5*Math.sqrt(Math.abs(discriminant)));
+		    eigenvector[row + 1] = eigenvector[row].conjugate();
+		    row = row + 2;
+		}
+	    }
+	    if (row == dimension - 1)
+	    {
+		eigenvector[row] = Complex.toComplex(result.matrix[row][row]);
+	    }
+	    return eigenvector;
+	}
+	else
+	{
+	    Complex []eigenvector = new Complex[dimension];
+	    for (int i = 0; i < dimension; i++)
+	    {
+		eigenvector[i] = Complex.toComplex(result.matrix[i][i]);
+	    }
+	    return eigenvector;
+	}
+    }
+
     public static void main(String []args)
     {
 	int dimension = Integer.parseInt(args[0]);
-	double [][]array = new double [dimension][dimension];
 	Random random = new Random();
+	double [][]array = new double [dimension][dimension];
 	for (int i = 0; i < dimension; i++)
 	{
-	    for (int j= 0; j < dimension; j++)
+	    for (int j = 0; j < dimension; j++)
 	    {
-		array[i][j] = random.nextInt(dimension) + 0.3*random.nextInt(3*dimension);;
+		array[i][j] = random.nextInt(2*i + 3*j + 3);
 	    }
 	}
 	Matrix matrix = new Matrix(array);
-	System.out.println("Below is your matrix : ");
 	matrix.printMatrix();
-	System.out.println("Det of your matrix is " + matrix.detOfMatrix());
-	boolean b = true;
-	b = matrix.isSingular();
-	System.out.println("Matrix is singular? " + b);
-	if (!b)
+	System.out.println("Testing QRDecomposition : ");
+	Matrix [] arrayMatrix = matrix.QRDecomposition();
+	System.out.println("Q matrix is ");
+	arrayMatrix[0].printMatrix();
+	System.out.println("R matrix is ");
+	arrayMatrix[1].printMatrix();
+	System.out.println("Product of Q and R is ");
+	arrayMatrix[0].product(arrayMatrix[1]).printMatrix();
+
+	System.out.println("Testing eigenvalues: ");
+	Complex [] eigenvector = matrix.eigenvalues();
+	for (int i = 0; i < eigenvector.length; i++)
 	{
-	    System.out.println("The inverse of your original matrix is : ");
-	    matrix.inverse().printMatrix();
+	    System.out.println(eigenvector[i]);
 	}
     }
 }

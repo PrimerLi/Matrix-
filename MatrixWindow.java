@@ -12,6 +12,8 @@ public class MatrixWindow implements ActionListener
     private int matrixDimension;
     private double [][]matrix;
     private JTextField showDet;
+    private JTextArea showEigenvalues;
+    private JScrollPane showEigenvaluesInScrollPane;
     private JTextField alert;
     
     public MatrixWindow()
@@ -92,6 +94,12 @@ public class MatrixWindow implements ActionListener
 		panel.revalidate();
 		panel.repaint();
 	    }
+	    if (showEigenvaluesInScrollPane != null)
+	    {
+		panel.remove(showEigenvaluesInScrollPane);
+		panel.revalidate();
+		panel.repaint();
+	    }
 	    if (inverseMatrixPanel != null)
 	    {
 		panel.remove(inverseMatrixPanel);
@@ -105,23 +113,40 @@ public class MatrixWindow implements ActionListener
 		panel.repaint();
 	    }
 
-	    panel.setLayout(new GridLayout(4, 1));
+	    panel.setLayout(new GridLayout(5, 1));
+
 	    showDet = new JTextField("Det of your matrix = " + detOfMatrix(MatrixWindow.this.matrix));
-	    showDet.setFont(new Font("serif", Font.PLAIN, 24));
+	    showDet.setFont(new Font("cambria", Font.PLAIN, 24));
 	    showDet.setColumns(30);
 	    panel.add(showDet);
+
 
 	    Matrix temp = new Matrix(MatrixWindow.this.matrix);
 	    if (!temp.isSingular())
 	    {
 		inverseMatrixPanel = new MatrixPanel(temp.inverse());
 		panel.add(inverseMatrixPanel);
+	    	StringBuilder s = new StringBuilder();
+	    	Complex []eigenvector = eigenvalues(MatrixWindow.this.matrix);
+	   	s.append("Eigenvalues of your matrix are shown below: \n");
+	    	for (int i = 0; i < eigenvector.length; i++)
+	    	{
+		    s.append("# " + i + ": " + eigenvector[i].toString() + "\n");
+	    	}
+	    	showEigenvalues = new JTextArea(s.toString());
+	    	showEigenvalues.setFont(new Font("cambria", Font.PLAIN, 24));
+		showEigenvaluesInScrollPane = new JScrollPane(showEigenvalues);
+	    	panel.add(showEigenvaluesInScrollPane);
 	    }
 	    else
 	    {
 		alert = new JTextField("This matrix is singular. ");
-		alert.setFont(new Font("serif", Font.PLAIN, 24));
+		alert.setFont(new Font("cambria", Font.PLAIN, 24));
 		panel.add(alert);
+		showEigenvalues = new JTextArea("Currently, eigenvalues of singular matrix cannot be calculated. ");
+		showEigenvalues.setFont(new Font("cambria", Font.PLAIN, 24));
+		showEigenvaluesInScrollPane = new JScrollPane(showEigenvalues);
+		panel.add(showEigenvaluesInScrollPane);
 	    }
 
 	    panel.revalidate();
@@ -135,10 +160,16 @@ public class MatrixWindow implements ActionListener
 	return myMatrix.detOfMatrix();
     }
 
+    private static Complex [] eigenvalues(double [][]matrix)
+    {
+	Matrix myMatrix = new Matrix(matrix);
+	return myMatrix.eigenvalues();
+    }
+
     public static void main(String []args)
     {
 	MatrixWindow window = new MatrixWindow();
-	window.createButton("start", new Font("Serif", Font.PLAIN, 24));
+	window.createButton("start", new Font("Serif", Font.PLAIN, 30));
 	window.setVisible(true);
     }
 }

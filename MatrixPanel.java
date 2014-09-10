@@ -37,7 +37,7 @@ public class MatrixPanel extends JPanel
 		JTextField temp = new JTextField();
 		temp.setColumns(10);
 		temp.setFont(new Font("serif", Font.PLAIN, 24));
-		temp.setText(String.valueOf(argument.getMatrix()[i][j]));
+		temp.setText(String.format("%.5f", argument.getMatrix()[i][j]));
 		matrix[i][j] = temp;
 		this.add(temp);
 	    }
