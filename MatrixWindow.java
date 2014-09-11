@@ -15,6 +15,8 @@ public class MatrixWindow implements ActionListener
     private JTextArea showEigenvalues;
     private JScrollPane showEigenvaluesInScrollPane;
     private JTextField alert;
+    private JButton changeDimension;
+    private JButton restart;
     
     public MatrixWindow()
     {
@@ -55,6 +57,10 @@ public class MatrixWindow implements ActionListener
 	}
 	JOptionPane.showMessageDialog(this.frame, "Please enter your matrix elements");
 	panel.remove(this.button);
+	if (restart != null)
+	{
+	    panel.remove(this.restart);
+	}
 	matrixPanel = new MatrixPanel(matrixDimension);
 	panel.add(matrixPanel);
 	panel.revalidate();
@@ -69,14 +75,14 @@ public class MatrixWindow implements ActionListener
 
 	JButton okButton = new JButton("OK");
 	okButton.setFont(new Font("serif", Font.PLAIN, 24));
-	okButton.addActionListener(new enterMatrixListener());
+	okButton.addActionListener(new EnterMatrixListener());
 	panel.setLayout(new GridLayout(3, 1));
 	panel.add(okButton);
 	panel.revalidate();
 	panel.repaint();
     }
 
-    private class enterMatrixListener implements ActionListener
+    private class EnterMatrixListener implements ActionListener
     {
 	public void actionPerformed(ActionEvent e)
 	{
@@ -91,29 +97,29 @@ public class MatrixWindow implements ActionListener
 	    if (showDet != null)
 	    {
 		panel.remove(showDet);
-		panel.revalidate();
-		panel.repaint();
 	    }
 	    if (showEigenvaluesInScrollPane != null)
 	    {
 		panel.remove(showEigenvaluesInScrollPane);
-		panel.revalidate();
-		panel.repaint();
 	    }
 	    if (inverseMatrixPanel != null)
 	    {
 		panel.remove(inverseMatrixPanel);
-		panel.revalidate();
-		panel.repaint();
 	    }
 	    if (alert != null)
 	    {
 		panel.remove(alert);
-		panel.revalidate();
-		panel.repaint();
+	    }
+	    if (changeDimension != null)
+	    {
+		panel.remove(changeDimension);
+	    }
+	    if (restart != null)
+	    {
+		panel.remove(restart);
 	    }
 
-	    panel.setLayout(new GridLayout(5, 1));
+	    panel.setLayout(new GridLayout(3, 2));
 
 	    showDet = new JTextField("Det of your matrix = " + detOfMatrix(MatrixWindow.this.matrix));
 	    showDet.setFont(new Font("cambria", Font.PLAIN, 24));
@@ -149,8 +155,28 @@ public class MatrixWindow implements ActionListener
 		panel.add(showEigenvaluesInScrollPane);
 	    }
 
+	    changeDimension = new JButton("Change dimension");
+	    changeDimension.setFont(new Font("cambria", Font.PLAIN, 24));
+	    changeDimension.addActionListener(new ChangeDimensionListener());
+	    panel.add(changeDimension);
+
 	    panel.revalidate();
 	    panel.repaint();
+	}
+    }
+
+    private class ChangeDimensionListener implements ActionListener
+    {
+	public void actionPerformed(ActionEvent e)
+	{
+	    MatrixWindow.this.panel.removeAll();
+	    MatrixWindow.this.restart = new JButton("Restart");
+	    restart.setFont(new Font("cambria", Font.PLAIN, 24));
+	    restart.addActionListener(MatrixWindow.this);
+	    MatrixWindow.this.panel.setLayout(new GridLayout(2, 1));
+	    MatrixWindow.this.panel.add(restart);
+	    MatrixWindow.this.panel.revalidate();
+	    MatrixWindow.this.panel.repaint();
 	}
     }
 
