@@ -293,8 +293,24 @@ public class Matrix
 	    }
 	}
 	Matrix Q = new Matrix(temp);
-	Matrix R = this.inverse().product(Q);
-	R = R.inverse();
+	double [][]RArray = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < i; j++)
+	    {
+		RArray[i][j] = 0;
+	    }
+	}
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = i; j < dimension; j++)
+	    {
+		RArray[i][j] = e[i].innerProductWith(xi[j]);
+	    }
+	}
+	Matrix R = new Matrix(RArray);
+	/*Matrix R = this.inverse().product(Q);
+	R = R.inverse();*/
 	Matrix [] matrixArray = new Matrix[2];
 	matrixArray[0] = Q;
 	matrixArray[1] = R;
@@ -399,7 +415,8 @@ public class Matrix
 	{
 	    for (int j = 0; j < dimension; j++)
 	    {
-		array[i][j] = random.nextInt(2*i + 3*j + 3);
+		array[i][j] = random.nextInt(3*i + 4*j + 2);
+		//array[i][j] = 1;
 	    }
 	}
 	Matrix matrix = new Matrix(array);

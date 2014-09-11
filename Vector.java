@@ -108,8 +108,20 @@ public class Vector
 
     public Vector normalize()
     {
-	Vector vector = new Vector(length);
-	return this.scale(1.0/this.norm());
+	double epsilon = 0.00000001;
+	if (this.norm() > epsilon) 
+	{
+	    return this.scale(1.0/this.norm());
+	}
+	else
+	{
+	    Vector nullVector = new Vector(length);
+	    for (int i = 0; i < length; i++)
+	    {
+		nullVector.array[i] = 0;
+	    }
+	    return nullVector;
+	}
     }
 
     public double element(int i)
