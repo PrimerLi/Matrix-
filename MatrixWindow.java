@@ -22,7 +22,7 @@ public class MatrixWindow implements ActionListener
     {
 	matrixDimension = 0;
 	panel = new JPanel();
-	panel.setLayout(new GridLayout(2, 1));
+	panel.setLayout(new GridLayout(1, 1));
 	frame = new JFrame("Matrix calculator");
 	frame.setSize(new Dimension(800, 600));
 	frame.setDefaultCloseOperation(frame.EXIT_ON_CLOSE);
@@ -76,7 +76,7 @@ public class MatrixWindow implements ActionListener
 	JButton okButton = new JButton("OK");
 	okButton.setFont(new Font("serif", Font.PLAIN, 24));
 	okButton.addActionListener(new EnterMatrixListener());
-	panel.setLayout(new GridLayout(3, 1));
+	panel.setLayout(new GridLayout(2, 1));
 	panel.add(okButton);
 	panel.revalidate();
 	panel.repaint();

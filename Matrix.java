@@ -65,6 +65,21 @@ public class Matrix
 	return new Matrix(temp);
     }
 
+    public Vector product(Vector argument)
+    {
+	double [] temp = new double [dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    double sum = 0;
+	    for (int j = 0; j < dimension; j++)
+	    {
+		sum = sum + this.matrix[i][j]*argument.element(j);
+	    }
+	    temp[i] = sum;
+	}
+	return new Vector(temp);
+    }
+
     public void printMatrix()
     {
 	for (int i = 0; i < dimension; i++)
@@ -78,6 +93,31 @@ public class Matrix
 	}
     }
 
+    private void printMatrixForMathematica()
+    {
+        System.out.print("{");
+        for (int i = 0; i < dimension; i++)
+        {
+            System.out.print("{");
+            for (int j = 0; j < dimension; j++)
+            {
+                if (j != dimension - 1)
+                {
+                    System.out.format("%.6f, ", matrix[i][j]);
+                }
+                else
+                {
+                    System.out.format("%.6f", matrix[i][j]);
+                } 
+            }
+            if (i != dimension - 1)
+		System.out.print("}, ");
+            else
+                System.out.print("}");
+        }
+        System.out.println("}");
+    }
+
     public int getDimension()
     {
 	return this.dimension;
@@ -86,6 +126,23 @@ public class Matrix
     public double [][] getMatrix()
     {
 	return matrix;
+    }
+
+    public Matrix randomize()
+    {
+	Random random = new Random();
+	double [][]randomArray = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		randomArray[i][j] = random.nextDouble();
+	    }
+	}
+	Matrix randomMatrix = new Matrix(randomArray);
+	/*System.out.println("Matrix used to randomize the original matrix : ");
+	randomMatrix.printMatrixForMathematica();*/
+	return ((randomMatrix.inverse()).product(this)).product(randomMatrix);
     }
 
     public double detOfMatrix()
@@ -349,19 +406,32 @@ public class Matrix
 
     public Complex []eigenvalues()
     {
-	return this.eigenvalues(100);
+	return this.eigenvalues(600);
     }
 
     private Complex [] eigenvalues(int iterationNumber)
     {
-	Matrix []matrixArray = this.QRDecomposition();
+	Matrix randomMatrix = this.randomize();
+	//System.out.println("Randomized matrix : ");
+	//randomMatrix.printMatrixForMathematica();
+	Matrix []matrixArray = randomMatrix.QRDecomposition();
 	for (int i = 0; i < iterationNumber; i++)
 	{
 	    Matrix tempMatrix = matrixArray[1].product(matrixArray[0]);
 	    matrixArray = tempMatrix.QRDecomposition();
 	}
 
+	/*Matrix []matrixArray = this.QRDecomposition();
+	for (int i = 0; i < dimension; i++)
+	{
+	    Matrix tempMatrix = matrixArray[1].product(matrixArray[0]);
+	    matrixArray = tempMatrix.QRDecomposition();
+	}*/
+
 	Matrix result = matrixArray[1].product(matrixArray[0]);
+	/*System.out.println("QR iteration result: ");
+	result.printMatrix();
+	result.printMatrixForMathematica();*/
 
 	if (isBlock(result))
 	{
@@ -384,8 +454,16 @@ public class Matrix
 		    double trace = a + d;
 		    double determinant = a*d - b*c;
 		    double discriminant = trace*trace - 4*determinant;
-		    eigenvector[row] = new Complex(0.5*trace, 0.5*Math.sqrt(Math.abs(discriminant)));
-		    eigenvector[row + 1] = eigenvector[row].conjugate();
+		    if (discriminant < 0)
+		    {
+			eigenvector[row] = new Complex(0.5*trace, 0.5*Math.sqrt(Math.abs(discriminant)));
+			eigenvector[row + 1] = eigenvector[row].conjugate();
+		    }
+		    else
+		    {
+			eigenvector[row] = new Complex(0.5*(trace + Math.sqrt(discriminant)), 0);
+			eigenvector[row + 1] = new Complex(0.5*(trace - Math.sqrt(discriminant)), 0);
+		    }
 		    row = row + 2;
 		}
 	    }
@@ -415,12 +493,28 @@ public class Matrix
 	{
 	    for (int j = 0; j < dimension; j++)
 	    {
-		array[i][j] = random.nextInt(3*i + 4*j + 2);
-		//array[i][j] = 1;
+		if (i == j + 1)
+		    array[i][j] = random.nextInt(dimension*dimension);
+		else
+		    array[i][j] = 0;
 	    }
 	}
+	array[0][dimension - 1] = random.nextInt(dimension*dimension);
+
+	/*for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		if (i + j == dimension - 1)
+		    array[i][j] = random.nextInt(dimension*dimension);
+		else
+		    array[i][j] = 0;
+	    }
+	}*/
+
 	Matrix matrix = new Matrix(array);
 	matrix.printMatrix();
+	matrix.printMatrixForMathematica();
 	System.out.println("Testing QRDecomposition : ");
 	Matrix [] arrayMatrix = matrix.QRDecomposition();
 	System.out.println("Q matrix is ");
