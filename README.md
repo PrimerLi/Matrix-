@@ -14,4 +14,4 @@ And then fowllow the instructions on the popped window.
 
 When prompted to enter your matrix, note that only decimal number will be accpeted. No fractions. 
 
-The program will not give the correct result if all the eigenvalues of your matrix are of the same magnitude. Especially, this program will not give the correct eigenvalues for an orthogonal matrix unless the orthogonal matrix is very special, for example, an identity matrix. This is a bug that I hope to fix in the future. 
+All known bugs have been fixed.
