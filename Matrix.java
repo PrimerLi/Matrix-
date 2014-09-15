@@ -80,6 +80,37 @@ public class Matrix
 	return new Vector(temp);
     }
 
+    public Matrix add(Matrix argument)
+    {
+	double [][]temp = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		temp[i][j] = this.matrix[i][j] + argument.matrix[i][j];
+	    }
+	}
+	return new Matrix(temp);
+    }
+
+    public Matrix scale(double factor)
+    {
+	double [][]temp = new double [dimension][dimension];
+	for (int i = 0; i < dimension; i++)
+	{
+	    for (int j = 0; j < dimension; j++)
+	    {
+		temp[i][j] = factor*this.matrix[i][j];
+	    }
+	}
+	return new Matrix(temp);
+    }
+
+    public Matrix subtract(Matrix argument)
+    {
+	return this.add(argument.scale(-1.0));
+    }
+
     public void printMatrix()
     {
 	for (int i = 0; i < dimension; i++)
@@ -93,7 +124,7 @@ public class Matrix
 	}
     }
 
-    private void printMatrixForMathematica()
+    public void printMatrixForMathematica()
     {
         System.out.print("{");
         for (int i = 0; i < dimension; i++)
@@ -409,11 +440,60 @@ public class Matrix
 	return this.eigenvalues(600);
     }
 
+    public double trace()
+    {
+	double sum = 0;
+	for (int i = 0; i < dimension; i++)
+	{
+	    sum = sum + this.matrix[i][i];
+	}
+	return sum;
+    }
+
+    public double normOfMatrix()
+    {
+	return Math.sqrt(((this.transpose()).product(this)).trace());
+    }
+
+    private boolean isUpperTriangle()
+    {
+	if (dimension <= 0) return false;
+	if (this.dimension == 1 || this.dimension == 2) return true;
+	double epsilon = 0.0000001;
+	if (this.dimension == 3)
+	{
+	    if (Math.abs(this.matrix[dimension - 1][0]) < epsilon)
+	    {
+		if (Math.abs(matrix[dimension - 1][1]) < epsilon || Math.abs(matrix[1][0]) < epsilon)
+		{
+		    return true;
+		}
+	    }
+	    return false;
+	}
+	else
+	{
+	    for (int i = 1; i <= dimension - 1; i++)
+	    {
+		for (int j = 0; j <= i - 2; j++)
+		{
+		    if (Math.abs(matrix[i][j]) > epsilon)
+		    {
+			return false;
+		    }
+		}
+	    }
+	    return true;
+	}
+    }
+
     private Complex [] eigenvalues(int iterationNumber)
     {
 	Matrix randomMatrix = this.randomize();
 	//System.out.println("Randomized matrix : ");
 	//randomMatrix.printMatrixForMathematica();
+	boolean hasConverged = false;
+	double lambda = 1;
 	Matrix []matrixArray = randomMatrix.QRDecomposition();
 	for (int i = 0; i < iterationNumber; i++)
 	{
@@ -421,17 +501,47 @@ public class Matrix
 	    matrixArray = tempMatrix.QRDecomposition();
 	}
 
-	/*Matrix []matrixArray = this.QRDecomposition();
-	for (int i = 0; i < dimension; i++)
-	{
-	    Matrix tempMatrix = matrixArray[1].product(matrixArray[0]);
-	    matrixArray = tempMatrix.QRDecomposition();
-	}*/
-
 	Matrix result = matrixArray[1].product(matrixArray[0]);
-	/*System.out.println("QR iteration result: ");
-	result.printMatrix();
-	result.printMatrixForMathematica();*/
+
+	if (result.isUpperTriangle())
+	{
+	    hasConverged = true;
+	}
+	else
+	{
+	    hasConverged = false;
+	}
+
+	if (!hasConverged)
+	{
+	    //System.out.println("QR algorithm is not applicable to the original matrix. ");
+	    double [][]lambdaArray = new double [dimension][dimension];
+	    for (int i = 0; i < dimension; i++)
+	    {
+		for (int j = 0; j < dimension; j++)
+		{
+		    if (i == j)
+			lambdaArray[i][j] = lambda;
+		    else
+			lambdaArray[i][j] = 0;
+		}
+	    }
+	    Matrix lambdaMatrix = new Matrix(lambdaArray);
+	    randomMatrix = randomMatrix.subtract(lambdaMatrix);
+	    //System.out.println("New matrix : ");
+	    //randomMatrix.printMatrix();
+	    //randomMatrix.printMatrixForMathematica();
+	    matrixArray = randomMatrix.QRDecomposition();
+	    for (int i = 0; i < iterationNumber; i++)
+	    {
+		Matrix tempMatrix = matrixArray[1].product(matrixArray[0]);
+		matrixArray = tempMatrix.QRDecomposition();
+	    }
+	    result = matrixArray[1].product(matrixArray[0]);
+	    /*System.out.println("QR Result for new matrix : ");
+	    result.printMatrix();
+	    result.printMatrixForMathematica();*/
+	}
 
 	if (isBlock(result))
 	{
@@ -471,7 +581,16 @@ public class Matrix
 	    {
 		eigenvector[row] = Complex.toComplex(result.matrix[row][row]);
 	    }
-	    return eigenvector;
+	    if (hasConverged)
+		return eigenvector;
+	    else
+	    {
+		for (int i = 0; i < dimension; i++)
+		{
+		    eigenvector[i] = eigenvector[i].add(Complex.toComplex(lambda));
+		}
+		return eigenvector;
+	    }
 	}
 	else
 	{
@@ -480,12 +599,25 @@ public class Matrix
 	    {
 		eigenvector[i] = Complex.toComplex(result.matrix[i][i]);
 	    }
-	    return eigenvector;
+	    if (hasConverged)
+		return eigenvector;
+	    else
+	    {
+		for (int i = 0; i < dimension; i++)
+		{
+		    eigenvector[i] = eigenvector[i].add(Complex.toComplex(lambda));
+		}
+		return eigenvector;
+	    }
 	}
     }
 
     public static void main(String []args)
     {
+	if (args.length != 1)
+	{
+	    throw new IllegalArgumentException("Matrix dimension = args[0]");
+	}
 	int dimension = Integer.parseInt(args[0]);
 	Random random = new Random();
 	double [][]array = new double [dimension][dimension];
@@ -494,23 +626,15 @@ public class Matrix
 	    for (int j = 0; j < dimension; j++)
 	    {
 		if (i == j + 1)
-		    array[i][j] = random.nextInt(dimension*dimension);
+		    array[i][j] = 1;
+		/*else if (i == j)
+		    array[i][j] = -1;*/
 		else
 		    array[i][j] = 0;
 	    }
 	}
-	array[0][dimension - 1] = random.nextInt(dimension*dimension);
+	array[0][dimension - 1] = 1;
 
-	/*for (int i = 0; i < dimension; i++)
-	{
-	    for (int j = 0; j < dimension; j++)
-	    {
-		if (i + j == dimension - 1)
-		    array[i][j] = random.nextInt(dimension*dimension);
-		else
-		    array[i][j] = 0;
-	    }
-	}*/
 
 	Matrix matrix = new Matrix(array);
 	matrix.printMatrix();
